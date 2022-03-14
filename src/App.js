@@ -1,5 +1,7 @@
 import { AppRouter } from './router/AppRouter';
 import { createGlobalStyle } from 'styled-components';
+import mobileBackground from './assets/background-mobile.png';
+import desktopBackground from './assets/background-desktop.png';
 
 function App() {
   return (
@@ -15,11 +17,16 @@ const Normalize = createGlobalStyle`
     padding: 0px;
   }
   body {
-    background-image: url("https://res.cloudinary.com/rayci/image/upload/v1646156854/bg1_syd8wt.jpg");
+    background-image: url(${mobileBackground});
     background-size: cover;
     background-repeat: no-repeat;
     background-position: center;
     background-attachment: fixed;
+    transition: background-image 0.3s ease-in-out;
+
+    @media (min-width: 600px) {
+      background-image: url(${desktopBackground});
+    }
   }
 `;
 export default App;

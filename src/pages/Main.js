@@ -1,6 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { AsidePostsInfo } from '../components/AsidePostsInfo/AsidePostsInfo';
+import { AsideAnswersInfo } from '../components/AsideAnswersInfo/AsideAnswersInfo';
 import { Navbar } from '../components/navbar/Navbar';
 import { PostsGrid } from '../components/postsGrid/PostsGrid';
 import { useAuthorization } from '../hooks/useAuthorization';
@@ -35,6 +36,7 @@ export const Main = () => {
   const mostAnsweredPosts = 'search?searchBy=numAnswers&numAnswers=0&order=numAnswers';
   const mostViewedPosts = 'search?searchBy=content&order=views';
   const myPosts = `users/${ userProfile?.userData?.id}/posts?page=1&limit=5`;
+  const myAnswers = `users/${ userProfile?.userData?.id}/answers?page=1&limit=5`;
 
    return (
     <>
@@ -47,6 +49,12 @@ export const Main = () => {
           <AsidePostsInfo url={mostLikedPosts}>
             Top rated posts
           </AsidePostsInfo>
+          {
+            userProfile?.userData &&
+            <AsideAnswersInfo url={myAnswers}>
+              My Answers
+            </AsideAnswersInfo>
+          }
         </AsideWrapper>
         <GridWrapper className="animate__animated animate__fadeIn">
           <PostsGrid key={ debouncedSearch.search + new Date().toISOString() } searchData={ debouncedSearch} />
@@ -73,6 +81,15 @@ const AsideWrapper = styled.div`
   display: none;
   position: sticky;
   top: 0;
+  max-height: 698px;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  overflow-y: scroll;
+  overflow: scroll;
+  scrollbar-width: none;
 
   @media (min-width: 768px) {
     flex: 0 1 20%;
@@ -80,11 +97,14 @@ const AsideWrapper = styled.div`
     flex-flow: row wrap;
     align-items: flex-start;
     justify-content: center;
-    height: 30vh;
+    height: 100vh;
 
     & > *:not(:first-child) {
       margin-top: -0.85em;
     }
+  }
+  @media (min-height: 900px) {
+    max-height: 874px;
   }
 `;
 

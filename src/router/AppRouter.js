@@ -2,8 +2,8 @@ import React from 'react'
 import {
     Routes,
     Route,
-    Navigate
-  } from "react-router-dom";
+    Navigate,
+} from "react-router-dom";
 import { Login } from '../pages/Login';
 import { Register } from '../pages/Register';
 import { Main } from '../pages/Main';
@@ -15,6 +15,9 @@ import { UserPosts } from '../pages/UserPosts';
 import { UserAnswers } from '../pages/UserAnswers';
 import { UserProfile } from '../pages/UserProfile';
 import { UnloggedLanding } from '../components/unloggedLanding/UnloggedLanding';
+import { AccountActivation } from '../pages/AccountActivation';
+import { EmailConfirmation } from '../pages/EmailConfirmation';
+
 
 export const AppRouter = () => {
     const { isUserLoggedIn } = useAuthorization();
@@ -30,6 +33,8 @@ export const AppRouter = () => {
             <Route path="/users/:id/posts" element={ <UserPosts /> } />
             <Route path="/users/:id/answers" element={ <UserAnswers /> } />
             <Route path="/users/:id/profile" element={ <UserProfile /> } />
+            <Route path="/activation/:code" element={ <AccountActivation /> } />
+            <Route path="/confirmation/:code" element={ <EmailConfirmation /> } />
             <Route path="*" element={ <Main /> } />
         </Routes>
     )

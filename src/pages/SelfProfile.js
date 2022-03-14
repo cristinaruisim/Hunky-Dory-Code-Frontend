@@ -7,17 +7,17 @@ import {
   Select,
   TextField,
 } from "@mui/material";
-import axios from "axios";
 import { Formik } from "formik";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import Swal from "sweetalert2";
+import { AsideAnswersInfo } from "../components/AsideAnswersInfo/AsideAnswersInfo";
 import { AsidePostsInfo } from "../components/AsidePostsInfo/AsidePostsInfo";
 import { Navbar } from "../components/navbar/Navbar";
 import { useAuthorization } from "../hooks/useAuthorization";
+import { getTechnologies } from "../services/technologies/getTechnologies";
 import { updateProfilePicture, updateUserInfo, updateUserRole } from "../services/users/updateUserInfo";
-const { REACT_APP_API_URL } = process.env;
+import { displayModalWithTimer } from "../utils/helpers/displayModal";
 
 export const SelfProfile = () => {
   const { userProfile, userSession, logout } = useAuthorization();
@@ -48,7 +48,7 @@ export const SelfProfile = () => {
     setUserName(data.name);
     updateUserRole(handleRole(), userSession);
     updateUserInfo(userInfo, userSession);
-    if(!userInfo.password){
+    if(!userInfo.password && userInfo.email === userData.email) {
       return navigate("/search?q=");
     }
 
@@ -65,11 +65,8 @@ export const SelfProfile = () => {
     const newProfileImage = URL.createObjectURL(file);
     setProfilePicture(newProfileImage);
 
-    Swal.fire({
-      icon: "success",
-      title: "Profile picture updated",
-    });
     userData.image = await updateProfilePicture(userInfo, userSession);
+    displayModalWithTimer("success", "Profile picture updated", '', undefined, undefined, 2000);
   }
 
   const handleRole = () => {
@@ -85,13 +82,11 @@ export const SelfProfile = () => {
   };
 
   useEffect(() => {
-    async function getTechnologies() {
-      const response = await axios.get(
-        `${REACT_APP_API_URL}/api/v1/technologies`
-      );
-      setTechnologyData(response.data.technologies);
+    async function getData() {
+      const technologies = await getTechnologies();
+      setTechnologyData(technologies);
     }
-    getTechnologies();
+    getData();
   }, [userData.image]);
 
   const mostRecentPosts =
@@ -102,15 +97,17 @@ export const SelfProfile = () => {
     "search?searchBy=numAnswers&order=numAnswers&numAnswers=0";
   const mostViewedPosts = "search?&searchBy=content&orderBy=views";
   const myPosts = `users/${userData.id}/posts?page=1&limit=5`;
+  const myAnswers = `users/${ userProfile?.userData?.id}/answers?page=1&limit=5`;
 
   return (
     <>
       <ContentWrapper className="animate__animated animate__fadeIn">
         <StyledNavbar />
-        <AsideWrapper>
+        <AsideWrapper id="aside">
           <AsidePostsInfo url={mostRecentPosts}>Recent posts</AsidePostsInfo>
           <AsidePostsInfo url={mostLikedPosts}>Top rated posts</AsidePostsInfo>
-        </AsideWrapper>
+          <AsideAnswersInfo url={myAnswers}>My Answers</AsideAnswersInfo>
+          </AsideWrapper>
         <Formik
           initialValues={{
             email: userData.email,
@@ -320,6 +317,15 @@ const AsideWrapper = styled.div`
   display: none;
   position: sticky;
   top: 0;
+  max-height: 698px;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  overflow-y: scroll;
+  overflow: scroll;
+  scrollbar-width: none;
 
   @media (min-width: 768px) {
     flex: 0 1 20%;
@@ -327,11 +333,15 @@ const AsideWrapper = styled.div`
     flex-flow: row wrap;
     align-items: flex-start;
     justify-content: center;
-    height: 30vh;
-
+    height: 100vh;
+    
+    
     & > *:not(:first-child) {
       margin-top: -0.85em;
     }
+  }
+  @media (min-height: 900px) {
+    max-height: 874px;
   }
 `;
 
@@ -361,7 +371,7 @@ const ProfileWrapper = styled.div`
   flex-flow: row wrap;
   align-items: flex-start;
   justify-content: center;
-  background-color: rgba(255, 255, 255, 1);
+  background-color: rgba(255, 255, 255, 0.93);
   border-radius: 10px;
   box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
 

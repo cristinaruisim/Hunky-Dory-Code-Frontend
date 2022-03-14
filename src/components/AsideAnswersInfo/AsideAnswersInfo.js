@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { searchPublication } from '../../services/posts/searchPublication';
-export const AsidePostsInfo = ({children, url }) => {
+export const AsideAnswersInfo = ({children, url }) => {
     const [posts, setPosts] = useState([]);
     const navigate = useNavigate();
   
     useEffect(() => {
       async function getData () {
-        const results = (await searchPublication( url )).results
+        const results = (await searchPublication( url )).results;
         setPosts(results);
       }
       getData();
@@ -20,14 +20,14 @@ export const AsidePostsInfo = ({children, url }) => {
             <h1 onClick={ () => navigate(`/${url}`)}>{children}</h1>
             {
                 posts.map(post => (
-                    <div key={post.id} onClick={ () => navigate(`/posts/${post.id}`)}>
+                    <div key={post.answerId} onClick={ () => navigate(`/posts/${post.id}`)}>
                         <div id='img-container'>
-                            <img src={post.userImage} alt="author" />
-                            <p> {post.userName} {post.userLastname.slice(0,1)}.</p>
+                            <img src={post.image} alt="author" />
+                            <p> {post.name} {post.lastname.slice(0,1)}.</p>
                         </div>
                         <div id='content-container'>
                             <h2>{post.title.slice(0, 20)} <span> [...] </span></h2>
-                            <p dangerouslySetInnerHTML={{__html: post.content.slice(0, 30)+ '[...]'}} />
+                            <p dangerouslySetInnerHTML={{__html: post.answerContent.slice(0, 30)+ '[...]'}} />
                         </div>
                         <div id='info'>
                             <p>⚡:{post.likes} 👀:{post.views} 📢:{post.numAnswers}</p>

@@ -7,7 +7,6 @@ import { BurgerIcon } from '../burgerIcon/BurgerIcon';
 import { Menu } from '../menu/Menu';
 import { Search } from './Search';
 import logo from '../../assets/logo-wb.png';
-import knock from '../../assets/knock2.png';
 export const UnloggedLanding = () => {
     const navigate = useNavigate();
     const [ open, setOpen ] = useState( false );
@@ -25,7 +24,7 @@ export const UnloggedLanding = () => {
                 <div id='burger'>
                     {
                         !isUserLoggedIn ?
-                        <>
+                        <div id='auth-buttons'>
                             <StyledLogin variant="contained" 
                                 onClick={ () => navigate('/register')}>
                                     Sign Up
@@ -34,7 +33,7 @@ export const UnloggedLanding = () => {
                                 onClick={ () => navigate('/login')}>
                                 Sign In
                             </StyledRegister>
-                        </>
+                        </div>
                         :
                         <div id='profile-logout'>
                             <img src={userProfile?.userData?.image} onClick={ () => navigate('/profile')} alt='hunky dory user'  />
@@ -50,9 +49,6 @@ export const UnloggedLanding = () => {
                 <BodyWrapper className="animate__animated animate__fadeIn">
                     <Search search={search} setSearch={setSearch} />
                 </BodyWrapper>
-            <Slogan className="animate__animated animate__fadeIn">
-                <img src={ knock } alt="Hunky Dory Slogan" />
-            </Slogan>
 
             {
                 !isUserLoggedIn && (
@@ -69,32 +65,6 @@ export const UnloggedLanding = () => {
         </>
     )
 }
-const Slogan = styled.div`
-    margin: 0 auto;
-    width: 90%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    & > img {
-        width: 95%;
-        max-width: 700px;
-    }
-
-    @media (min-width: 600px) {
-        width: 80%;
-        & > img {
-            width: 50%;
-        }
-    }
-
-    @media (min-width: 768px) {
-        width: 70%;
-        & > img {
-            width: 70%;
-
-        }
-    }
-`;
 
 const BodyWrapper = styled.div`
     margin: 19vh auto;
@@ -116,9 +86,9 @@ const StyledHeader = styled.div`
     }
     & > .logo {
         margin: 2em auto 0 1em;
-        flex: 0 1 40%;
+        flex: 0 1 33%;
         & > img {
-            width: 80%;
+            width: 100%;
             max-width: 170px;
         }
     }
@@ -129,10 +99,12 @@ const StyledHeader = styled.div`
         & > button {
             display: none;
         }
-
+        & > #auth-buttons {
+            display: none;
+        }
         & > #profile-logout {
             display: none;
-            margin-top: 5em;
+            margin: 5em 10% 0 0;
             flex-flow: row wrap;
             align-items: center;
             justify-content: center;
@@ -148,7 +120,7 @@ const StyledHeader = styled.div`
                 border: 1px solid rgba(0, 0, 0, 0.1);
 
                 &:hover {
-                    transform: scale(1.1);
+                    transform: scale(1.05);
                 }
             }
             & > #logout-container {
@@ -164,7 +136,6 @@ const StyledHeader = styled.div`
                 }
             }
         }                
-
     }
 
     @media (min-width: 648px) {
@@ -179,39 +150,49 @@ const StyledHeader = styled.div`
             flex: 0 1 33%;
         }
         & > .logo {
-            margin: 1em -8em 0 0;
+            margin: 1em 0em 0 0;
+            display: flex;
+            flex-flow: row wrap;
+            align-items: center;
+            justify-content: center;
             & > img {
                 width: 40%;
             }
         }
         & > #burger {
-            margin-right: 5em;
-            flex: 0 1 20%;
+            flex: 0 1 33%;
             font-size: 0.3em;
             display: flex;
             flex-direction: row wrap;
-            justify-content: space-evenly;
+            justify-content: right;
             & > button {
                 display: block;
-                flex: 0 1 45%;
-            }
-            & > * {
-                flex: 0 1 35%;
+                flex: 0 1 25%;
             }
             & > #profile-logout {
                 display: flex;
+            }
+            & > #auth-buttons {
+                display: flex;
+                flex: 0 1 100%;
+                flex-flow: row wrap;
+                justify-content: right;
+                align-items: center;
+                & > * {
+                    margin-right: 2em;
+                    &:last-child {
+                        margin-right: 20%;
+                    }
+                }
             }
         }
     }
     @media (min-width: 1024px) {
         & > .logo {
-            margin: 1em -10em 0 0;
+            margin: 1em 0em 0 0;
         }
         & > #burger {
             font-size: 0.4em;
-            & > button {
-                flex: 0 1 35%;
-            }
         }
     }
 `;
@@ -227,17 +208,17 @@ const StyledAuthContainer = styled.div`
     align-items: center;
 
     & > * {
-        flex: 0 1 50%;
+        flex: 0 1 40%;
         display: flex;
         flex-flow: row wrap;
-        justify-content: center;
+        justify-content: space-around;
         align-items: center;
         max-width: max-content;
         text-decoration: none;
+        font-size: 0.8em;
     }
 
     @media (min-width: 768px) {
-        font-size: 0.5em;
         display: none;
     }
 `;

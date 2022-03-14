@@ -1,5 +1,4 @@
 import { MenuItem, Select, TextField } from "@mui/material";
-import axios from "axios";
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { AsidePostsInfo } from "../components/AsidePostsInfo/AsidePostsInfo";
@@ -8,14 +7,17 @@ import { TextEditor } from "../components/textEditor/TextEditor";
 import Swal from "sweetalert2";
 import { useAuthorization } from "../hooks/useAuthorization";
 import { useNavigate } from "react-router-dom";
-const { REACT_APP_API_URL } = process.env;
+import { AsideAnswersInfo } from "../components/AsideAnswersInfo/AsideAnswersInfo";
+import { createPost } from "../services/posts/createPost";
+import { getTechnologies } from "../services/technologies/getTechnologies";
+import { displayModal } from "../utils/helpers/displayModal";
 
 export const NewPost = () => {
   const [postBody, setPostBody] = useState("");
   const [postTitle, setPostTitle] = useState("");
   const [technology, setTechnology] = useState("0");
   const [technologyData, setTechnologyData] = useState([]);
-  const { userSession } = useAuthorization();
+  const { userSession, userProfile } = useAuthorization();
   const navigate = useNavigate();
 
   const mostRecentPosts =
@@ -25,40 +27,26 @@ export const NewPost = () => {
   const mostAnsweredPosts =
     "search?searchBy=numAnswers&order=numAnswers&numAnswers=0";
   const mostViewedPosts = "search?&searchBy=content&orderBy=views";
+  const myPosts = `users/${ userProfile?.userData?.id}/posts?page=1&limit=5`;
+  const myAnswers = `users/${ userProfile?.userData?.id}/answers?page=1&limit=5`;
+
   useEffect(() => {
-    async function getTechnologies() {
-      const response = await axios.get(
-        `${REACT_APP_API_URL}/api/v1/technologies`
-      );
-      setTechnologyData(response.data.technologies);
+    async function getData() {
+      const technologies = await getTechnologies();
+      setTechnologyData(technologies);
     }
-    getTechnologies();
+    getData();
   }, []);
+
   const handleSubmit = async () => {
     if (!postBody || !postTitle || technology === "0") {
-      return Swal.fire({
-        icon: "error",
-        title: "Oops...",
-        text: "Please fill all fields",
-      });
+      return displayModal(undefined, undefined, "Please fill all fields", undefined);
     }
-    if (postBody.length < 10) {
-      return Swal.fire({
-        icon: "error",
-        title: "Oops...",
-        text: "Post body must be at least 10 characters long",
-      });
+    if (postBody.length < 17) {
+      return displayModal(undefined, undefined, "Post body must be at least 10 characters long", undefined);
     }
-    const newPost = await axios({
-      method: "POST",
-      url: `${REACT_APP_API_URL}/api/v1/posts`,
-      headers: { Authorization: `Bearer ${userSession}` },
-      data: {
-        title: postTitle,
-        content: postBody,
-        technology: technology,
-      },
-    });
+    // Create new Post
+    const newPost = await createPost(postTitle, postBody, technology, userSession);
     const Toast = Swal.mixin({
       toast: true,
       position: "center",
@@ -85,6 +73,12 @@ export const NewPost = () => {
         <AsideWrapper>
           <AsidePostsInfo url={mostRecentPosts}>Recent posts</AsidePostsInfo>
           <AsidePostsInfo url={mostLikedPosts}>Top rated posts</AsidePostsInfo>
+          {
+            userProfile?.userData &&
+            <AsideAnswersInfo url={myAnswers}>
+              My Answers
+            </AsideAnswersInfo>
+          }
         </AsideWrapper>
         <PostGridWrapper>
           <div id="postDataContainer">
@@ -127,6 +121,12 @@ export const NewPost = () => {
           <AsidePostsInfo url={mostViewedPosts}>
             Most viewed posts
           </AsidePostsInfo>
+          {
+            userProfile?.userData &&
+            <AsidePostsInfo url={myPosts}>
+              My Posts
+            </AsidePostsInfo>
+          }
         </AsideWrapper>
       </ContentWrapper>
     </>
@@ -137,6 +137,16 @@ const AsideWrapper = styled.div`
   display: none;
   position: sticky;
   top: 0;
+  max-height: 698px;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  overflow-y: scroll;
+  overflow: scroll;
+  scrollbar-width: none;
 
   @media (min-width: 768px) {
     flex: 0 1 20%;
@@ -144,7 +154,15 @@ const AsideWrapper = styled.div`
     flex-flow: row wrap;
     align-items: flex-start;
     justify-content: center;
-    height: 80vh;
+    height: 100vh;
+
+    & > *:not(:first-child) {
+      margin-top: -0.85em;
+    }
+  }
+
+  @media (min-height: 900px) {
+    max-height: 874px;
   }
 `;
 
@@ -154,7 +172,7 @@ const ContentWrapper = styled.div`
   justify-content: center;
   flex-flow: wrap;
   max-width: 1620px;
-  margin: 0 auto;
+  margin: 1em auto;
 `;
 
 const PostGridWrapper = styled.div`
@@ -164,7 +182,7 @@ const PostGridWrapper = styled.div`
   flex-flow: row wrap;
   align-items: flex-start;
   justify-content: center;
-  height: 70vh;
+  height: 100vh;
 
   & > * {
     flex: 0 1 100%;
@@ -172,7 +190,7 @@ const PostGridWrapper = styled.div`
   & > div#postDataContainer {
     padding: 1em;
     border-radius: 10px;
-    background-color: rgba(255, 255, 255, 1);
+    background-color: rgba(255, 255, 255, 0.95);
     box-shadow: rgba(50, 50, 93, 0.25) 0px 2px 5px -1px,
       rgba(0, 0, 0, 0.3) 0px 3px 3px -1px;
     & > * {
@@ -181,7 +199,7 @@ const PostGridWrapper = styled.div`
   }
 
   @media (min-width: 768px) {
-    flex: 0 1 60%;
+    flex: 0 1 56%;
     & > * {
       flex: 0 1 88%;
     }

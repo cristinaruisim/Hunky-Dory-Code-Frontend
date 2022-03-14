@@ -1,9 +1,10 @@
-import axios  from 'axios';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { facebookAuthProvider, googleAuthProvider, startSignIn } from '../firebase/firebaseConfig';
-
-const { REACT_APP_API_URL } = process.env;
+import { authentication } from '../services/auth/authentication';
+import { getCurrentProfile } from '../services/auth/getCurrentProfile';
+import { login } from '../services/auth/login';
+import { displayModal } from '../utils/helpers/displayModal';
 const authContext = createContext();
 
 function useAuthorization( params ){
@@ -24,39 +25,33 @@ function AuthProvider( props ){
         if (userSession) {
             async function getUserProfile() {
                 try {
-                const response = await axios({
-                    method: "GET",
-                    url: `${REACT_APP_API_URL}/api/v1/auth/current`,
-                    headers: { Authorization: `Bearer ${userSession}` },
-                  });
-
-                setUserProfile(response?.data);
-                setIsUserLoggedIn(true);
+                const currentProfile = await getCurrentProfile( userSession );
+                    if( !currentProfile?.data?.errors){
+                        setUserProfile(currentProfile);
+                        setIsUserLoggedIn(true);
+                    }
                 } catch (error) {
-                    console.log("ERROR: ", error);
                     localStorage.removeItem( 'userSession' );
                     setUserSession(null);
                     setIsUserLoggedIn(false);
+                    displayModal('error', undefined, error.response.data.errors[0].msg, undefined);
                 }
             }
             getUserProfile();
         }
     }, [userSession]);
 
-    async function login( email, password ) {
+    async function startLogin( email, password ) {
         try{
-            console.log(email,password)
-            const response = await axios.post( `${REACT_APP_API_URL}/api/v1/auth/login`, {
-                email,
-                password
-            } );
-            const { accessToken } = response.data.response;
+            const response = await login( email, password );
+            const { accessToken } = response.response;
             setUserSession( accessToken );
             localStorage.setItem( 'userSession', accessToken );
             setIsUserLoggedIn( true );
-            navigate('/search?q=');
-        } catch ( error ){
-            return error.response;
+
+            return navigate('/search?q=');
+        }catch(error){
+            displayModal('error', undefined, error.response.data.errors[0].msg, undefined);
         }
     }
 
@@ -67,7 +62,6 @@ function AuthProvider( props ){
         setUserSession(null);
         setUserProfile(null);
         setIsUserLoggedIn(false);
-        console.log('Logged out');
     }
 
     async function signInWithFirebaseAuth( type ){
@@ -79,23 +73,22 @@ function AuthProvider( props ){
                 credentials = await startSignIn(facebookAuthProvider);
             }
             const { idToken: id_token, email } = credentials;
-            const response = await axios.post( `${REACT_APP_API_URL}/api/v1/auth`, {
-                id_token,
-                email,
-            });
-            const { accessToken } = response.data;
-            setUserSession( accessToken );
-            localStorage.setItem( 'userSession', accessToken );
-            setIsUserLoggedIn( true );
-            navigate('/search?q=');
+            const response = await authentication( id_token, email );
+            const { accessToken } = response;
+            if( accessToken ){
+                setUserSession( accessToken );
+                localStorage.setItem( 'userSession', accessToken );
+                setIsUserLoggedIn( true );
+                return navigate('/search?q=');
+            }
         }catch( error ){
-            console.log(error);
+            displayModal('error', undefined, error.response.data.errors[0].msg, undefined);
         }
     }
 
     const value = {
         userSession,
-        login,
+        startLogin,
         logout,
         userProfile,
         setUserProfile,

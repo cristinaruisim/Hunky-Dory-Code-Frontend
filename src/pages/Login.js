@@ -1,14 +1,13 @@
 import { TextField, Typography, Button } from '@mui/material';
 import { Formik } from 'formik';
-import React, { useState } from 'react';
+import React from 'react';
 import styled from 'styled-components';
 import { FacebookLoginButton, GoogleLoginButton } from "react-social-login-buttons";
 import { useAuthorization } from '../hooks/useAuthorization';
-import logo from '../assets/logo2.png';
+import { Navbar } from '../components/navbar/Navbar';
 
 export const Login = () => {
-    const { login, signInWithFirebaseAuth } = useAuthorization();
-    const [ error, setError ] = useState('');
+    const { startLogin, signInWithFirebaseAuth } = useAuthorization();
     const handleAuth = async (e) => {
         e.preventDefault();
         if(e.target.textContent.includes('Google')){
@@ -18,98 +17,106 @@ export const Login = () => {
     }
 
     return (
-        <StyledWrapper>
-            <Typography
-                textAlign={"center"}
-                variant="h4"
-                gutterBottom
-                component="h2"
-                >
-                Login
-                </Typography>
-                <Formik
-                    initialValues = { {
-                        email: "",
-                        password: "",
-                    } }
-                    validate={ ( values ) => {
-                        const errors = {};
+        <ContentWrapper className="animate__animated animate__fadeIn">
+            <StyledNavbar />
+            <StyledWrapper>
+                <Typography
+                    textAlign={"center"}
+                    variant="h4"
+                    gutterBottom
+                    component="h2"
+                    >
+                    Login
+                    </Typography>
+                    <Formik
+                        initialValues = { {
+                            email: "",
+                            password: "",
+                        } }
+                        validate={ ( values ) => {
+                            const errors = {};
 
-                        if ( !values.email ) {
-                            errors.email = "email required!";
-                        }
-
-                        if ( !values.password ) {
-                            errors.password = "password required!";
-                        }
-                        return errors;
-                    } }
-                    onSubmit={ async ( values ) => {
-                        const respData = await login( values.email, values.password );
-                        if( respData ){
-                            const err = respData.data.errors;
-                            setError( err[0].msg );
-                        }
-                    } }
-                >
-                    {({
-                        values,
-                        errors,
-                        touched,
-                        handleChange,
-                        handleBlur,
-                        handleSubmit,
-                        isSubmitting,
-                    }) => (
-                        <form onSubmit={handleSubmit}>
-                            <StyledField
-                                id="email"
-                                name="email"
-                                type="email"
-                                label="Email"
-                                variant="standard"
-                                onChange={handleChange}
-                                onBlur={handleBlur}
-                                value={values.email}
-                                error={errors.email && touched.email}
-                                helperText={touched.email && errors.email}
-                                fullWidth
-                            />
-
-                            <StyledField
-                                id="password"
-                                name="password"
-                                type="password"
-                                label="Password"
-                                variant="standard"
-                                onChange={handleChange}
-                                onBlur={handleBlur}
-                                value={values.password}
-                                error={errors.password && touched.password}
-                                helperText={touched.password && errors.password}
-                                fullWidth
-                            />
-
-                            {
-                                error && <StyledErrorMessage severity='error'> {error} </StyledErrorMessage>
+                            if ( !values.email ) {
+                                errors.email = "email required!";
                             }
 
-                            <StyledButton type="submit" variant="contained">
-                                Login
-                            </StyledButton>
-                            <span> OR </span>
-                            <StyledSocialWrapper>
-                                <StyledGoogleButton onClick={  handleAuth } />
-                            </StyledSocialWrapper>
-                            <StyledSocialWrapper>
-                                <StyledFacebookButton onClick={ handleAuth } />
-                            </StyledSocialWrapper>
-                        </form>
-                    )}
-                </Formik>
-        </StyledWrapper>
+                            if( values.email && !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email) ){
+                                errors.email = "invalid email!";
+                            }
+
+                            if ( !values.password ) {
+                                errors.password = "password required!";
+                            }
+                            return errors;
+                        } }
+                        onSubmit={ async ( values ) => {
+                            await startLogin( values.email, values.password );
+                        } }
+                    >
+                        {({
+                            values,
+                            errors,
+                            touched,
+                            handleChange,
+                            handleBlur,
+                            handleSubmit,
+                            isSubmitting,
+                        }) => (
+                            <form onSubmit={handleSubmit}>
+                                <StyledField
+                                    id="email"
+                                    name="email"
+                                    type="email"
+                                    label="Email"
+                                    variant="standard"
+                                    onChange={handleChange}
+                                    onBlur={handleBlur}
+                                    value={values.email}
+                                    error={errors.email && touched.email}
+                                    helperText={touched.email && errors.email}
+                                    fullWidth
+                                />
+
+                                <StyledField
+                                    id="password"
+                                    name="password"
+                                    type="password"
+                                    label="Password"
+                                    variant="standard"
+                                    onChange={handleChange}
+                                    onBlur={handleBlur}
+                                    value={values.password}
+                                    error={errors.password && touched.password}
+                                    helperText={touched.password && errors.password}
+                                    fullWidth
+                                />
+
+                                <StyledButton type="submit" variant="contained">
+                                    Login
+                                </StyledButton>
+                                <span> OR </span>
+                                <StyledSocialWrapper>
+                                    <StyledGoogleButton onClick={  handleAuth } />
+                                </StyledSocialWrapper>
+                                <StyledSocialWrapper>
+                                    <StyledFacebookButton onClick={ handleAuth } />
+                                </StyledSocialWrapper>
+                            </form>
+                        )}
+                    </Formik>
+            </StyledWrapper>
+        </ContentWrapper>
     )
 }
+
+const ContentWrapper = styled.div`
+  display: flex;
+  flex-flow: row wrap;
+  justify-content: center;
+  max-width: 1620px;
+  margin: 0 auto;
+  position: relative;
+`;
 
 const StyledWrapper = styled.div`
     border-radius: 10px;
@@ -117,48 +124,50 @@ const StyledWrapper = styled.div`
     box-shadow: 4px -4px 13px 1px rgba(0,0,0, 0.2),
                 -2px 3px 19px 1px rgba(0,0,0, 0.2);
     border: 1px solid rgba(0,0,0, 0.2);
-    padding: 1em;
+    padding: 3em 1em 1em 1em;
     display: flex;
-    min-width: 81%;
-    max-width: 81%;
-    margin: 10vh auto;
+    min-width: 70%;
+    max-width: 85%;
+    margin: 3vh auto;
     flex-flow: column wrap;
+
     & form {
-        margin-top: 15vh;
+        margin-top: 5vh;
         text-align: center;
         & >span {
             display: block;
-            font-size: 1.5em;
+            font-size: 2em;
             margin: 2vh auto;
         }
     }
     transition: all 0.3s ease-in-out;
 
-    @media (min-width: 768px) {
-        min-width: 30%;
-        max-width: 30%;
-        padding: 3em 3em;
+    @media (min-width: 648px) {
+        min-width: 50%;
+        max-width: 50%;
         margin: 5% auto 0 auto;
+
+        & >:first-child {
+            margin-top: 1em;
+        }
         & form {
-            margin-top: 0vh;
+            padding: 1em;
             & span {
                 font-size: 1.1em;
             }
         }
-        &:before {
-            background-image: url(${logo});
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-            content: "";
-            display: block;
-            height: 80%;
-            left: 27%;
-            position: absolute;
-            top: 1%;
-            width: 50%;
-            z-index: -1;
-            overflow: hidden;
+    }
+
+    @media (min-width: 768px) {
+        min-width: 48.5%;
+        max-width: 48.5%;
+        padding: 1em;
+        margin: 5% auto 0 auto;
+        & form {
+            padding: 1em;
+            & span {
+                font-size: 1.1em;
+            }
         }
     }
 `;
@@ -167,18 +176,6 @@ const StyledSocialWrapper = styled.div`
 }
 `;
 
-const StyledErrorMessage = styled.div`
-    && {
-        max-width: 100%;
-        min-width: 100%;
-        background-color: rgba(255, 30, 0, 0.59);
-        margin: 1vh auto;
-        font-size: 1.3em;
-        border: 1px solid red;
-        border-radius: 5px;
-        flex: 1 1 auto;
-    }
-`;
 const styledButton = ( button ) => {
     return styled(button)`
         && {
@@ -213,3 +210,6 @@ const StyledButton = styled(Button)`
     }
 `;
 
+const StyledNavbar = styled(Navbar)`
+  flex: 0 1 100%;
+`;

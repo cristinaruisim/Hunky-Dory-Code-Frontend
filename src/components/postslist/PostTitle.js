@@ -1,10 +1,9 @@
 import { Divider } from '@mui/material';
-import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 import hunky from '../../assets/hdc-hunky.png';
-const { REACT_APP_API_URL } = process.env;
+import { getUserRating } from '../../services/users/getUserRating';
 
 export const PostTitle = ({ title, date, author, userImage, userId, content, postId, data }) => {
     const userName = author.split(' ')[0] + ' ' + author.split(' ')[1].slice(0, 1) + '.';
@@ -13,15 +12,15 @@ export const PostTitle = ({ title, date, author, userImage, userId, content, pos
     const [ userRating, setUserRating ] = useState();
 
     useEffect(() => {
-        async function getUserRating() {
+        async function getData() {
             try{
-                const response = await axios.get(`${REACT_APP_API_URL}/api/v1/users/${userId}/rating`);
-                setUserRating(response?.data.rating);
+                const rating = await getUserRating(userId);
+                setUserRating(rating);
             }catch( error ){
                 console.log(error);
             }
         }
-        getUserRating();
+        getData();
     }, [userId]);
     return (
         <StyledWrapper>
@@ -61,7 +60,7 @@ export const PostTitle = ({ title, date, author, userImage, userId, content, pos
 };
 
 const StyledWrapper = styled.div`
-    background-color: rgba(255, 255, 255, 1);
+    background-color: rgba(255, 255, 255, 0.95);
     border-radius: 10px;
     box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
     padding: 2% 1% 1.5% 1%;

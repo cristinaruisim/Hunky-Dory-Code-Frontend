@@ -1,4 +1,3 @@
-import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import styled from 'styled-components';
@@ -13,7 +12,8 @@ import alertOctagon from 'react-useanimations/lib/alertOctagon';
 import { getPostById } from '../services/posts/getPostById';
 import { setPostView } from '../services/posts/setPostView';
 import { Loading } from '../components/loading/Loading';
-const { REACT_APP_API_URL } = process.env;
+import { AsideAnswersInfo } from '../components/AsideAnswersInfo/AsideAnswersInfo';
+import { createAnswer } from '../services/posts/createAnswer';
 
 export const PostDetails = () => {
   const { userSession, userProfile } = useAuthorization();
@@ -40,15 +40,7 @@ export const PostDetails = () => {
   }, [id]);
 
   const handleSubmit = async () => {
-    await axios(
-    {
-      method: 'POST',
-      url: `${REACT_APP_API_URL}/api/v1/posts/${id}/answers`,
-      headers: {'Authorization': `Bearer ${userSession}`},
-      data: {
-        content: newAnswer,
-      },
-    });
+    await createAnswer(id, newAnswer, userSession);
     setPostedAnswer( new Date().toLocaleString() );
   }
 
@@ -56,6 +48,8 @@ export const PostDetails = () => {
   const mostLikedPosts = 'search?searchBy=titles&direction=desc&order=likes&limit=5';
   const mostAnsweredPosts = 'search?searchBy=numAnswers&order=numAnswers&numAnswers=0';
   const mostViewedPosts = 'search?&searchBy=content&orderBy=views';
+  const myPosts = `users/${ userProfile?.userData?.id}/posts?page=1&limit=5`;
+  const myAnswers = `users/${ userProfile?.userData?.id}/answers?page=1&limit=5`;
   if( isLoading ) return <Loading />;
 
   return (
@@ -69,11 +63,17 @@ export const PostDetails = () => {
           <AsidePostsInfo url={mostLikedPosts}>
             Top rated posts
           </AsidePostsInfo>
+          {
+            userProfile?.userData &&
+            <AsideAnswersInfo url={myAnswers}>
+              My Answers
+            </AsideAnswersInfo>
+          }
         </AsideWrapper>
         <GridWrapper>
           <PostInfo key={ postInfo?.postData?.id } post={postInfo} />
           {
-            postInfo?.technology.id === userProfile?.userData?.technologies
+            (postInfo?.technology.id === userProfile?.userData?.technologies || userProfile?.userData?.role === 'ADMIN')
             ?
             <TextEditor value={newAnswer} setValue={setNewAnswer} submit={ handleSubmit } />
             : <div id='disallowed-reply'>
@@ -94,6 +94,12 @@ export const PostDetails = () => {
           <AsidePostsInfo url={mostViewedPosts}>
             Most viewed posts
           </AsidePostsInfo>
+          {
+            userProfile?.userData &&
+            <AsidePostsInfo url={myPosts}>
+              My Posts
+            </AsidePostsInfo>
+          }
         </AsideWrapper>
       </ContentWrapper>
     </>
@@ -104,6 +110,16 @@ const AsideWrapper = styled.div`
   display: none;
   position: sticky;
   top: 0;
+  max-height: 698px;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  overflow-y: scroll;
+  overflow: scroll;
+  scrollbar-width: none;
 
   @media (min-width: 768px) {
     flex: 0 1 20%;
@@ -111,11 +127,14 @@ const AsideWrapper = styled.div`
     flex-flow: row wrap;
     align-items: flex-start;
     justify-content: center;
-    height: 30vh;
+    height: 100vh;
 
     & > *:not(:first-child) {
       margin-top: -0.85em;
     }
+  }
+  @media (min-height: 900px) {
+    max-height: 874px;
   }
 `;
 
@@ -177,6 +196,9 @@ const GridWrapper = styled.div`
     flex: 0 1 56%;
     & > * {
       flex: 0 1 88%;
+    }
+    & >:nth-child(2) {
+      flex: 0 1 91.5%;
     }
     & > div#disallowed-reply {
       flex: 0 1 89.85%;
